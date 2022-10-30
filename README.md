@@ -13,3 +13,4 @@ Please do not use any of the contents of this project for commercial or illegal 
 ## Reference
 
 - [Baymax-Zhu/yiqing.ctgu](https://github.com/Baymax-Zhu/yiqing.ctgu)
+- [404name/CTGU-Automatic-safety-report](https://github.com/404name/CTGU-Automatic-safety-report/blob/master/%E8%87%AA%E5%8A%A8%E6%8A%A5%E5%B9%B3%E5%AE%89.py)

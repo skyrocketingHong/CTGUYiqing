@@ -21,7 +21,7 @@ post_data = {
     "username": username,
     "password": password
 }
-response_resource = yiqing_session.post(login_url, data=post_data, headers=header)
+response_resource = yiqing_session.post(login_url, data=post_data, headers=header, timeout=None)
 
 # *******从提交页面获取 表单信息**********
 # 构建表单（默认身体健康)
@@ -56,15 +56,19 @@ post_data = {
     "qt": "",
 }
 get_form_url = "http://yiqing.ctgu.edu.cn/wx/health/toApply.do"
-response_resource = yiqing_session.get(get_form_url)
+response_resource = yiqing_session.get(get_form_url, timeout=5, headers =header, verify=False,)
 # 获取必要信息填入表单
 soup = BeautifulSoup(response_resource.text, "html.parser")
 get_form_list = soup.find_all("input")[0:15]
 for form_data in get_form_list:
-    post_data[form_data.attrs["name"]] = form_data.attrs["value"]
+    try:
+        name = form_data.attrs["name"]
+        post_data[name] = form_data.attrs["value"]
+    except:
+        print("无\"" + name + "\"字段")
 
 # *************提交最终表单***********
 post_form_url = "http://yiqing.ctgu.edu.cn/wx/health/saveApply.do"
 header["Referer"] = "http://yiqing.ctgu.edu.cn/wx/health/toApply.do"
-response_resource = yiqing_session.post(post_form_url, data=post_data, headers=header)
+response_resource = yiqing_session.post(post_form_url, data=post_data, headers=header, verify=False, timeout=None)
 print(response_resource.text)
