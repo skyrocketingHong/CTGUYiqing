@@ -1,8 +1,14 @@
 import requests
+import logging
+import sys
+from logging import StreamHandler, FileHandler
 from bs4 import BeautifulSoup
 
-
-# ****************登录*******************
+# 全局信息
+# 版本号
+version = "v1.1.1"
+# 日志级别
+log_level = logging.INFO
 # 学号
 username = ""
 # 密码
@@ -10,6 +16,25 @@ password = ""
 # 手机号
 phone_number = ""
 
+# 日志
+# 日志文件
+try:
+    open("yiqing.log", "a")
+except:
+    open("yiqing.log", mode='w', encoding='utf-8')
+# Handler
+sh = StreamHandler(sys.stdout)
+fh = FileHandler("yiqing.log")
+# 日志配置
+logging.basicConfig(handlers=[sh, fh], encoding="utf-8", level=log_level, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.info("🔔 " + version + " 开始尝试打卡")
+def response_log(session):
+    response_soup = BeautifulSoup(session.text, "html.parser")
+    str = response_soup.get_text("|", strip=True)
+    logging.info(str)
+    logging.debug(session.text.replace("\n", "").replace(" ", "").replace("\r", "").replace("   ", ""))
+
+# 登录
 login_url = "http://yiqing.ctgu.edu.cn/wx/index/loginSubmit.do"
 header = {
     "Referer": "http://yiqing.ctgu.edu.cn/wx/index/login.do?currSchool=ctgu&CURRENT_YEAR=2019",
@@ -22,9 +47,10 @@ post_data = {
     "password": password
 }
 response_resource = yiqing_session.post(login_url, data=post_data, headers=header, timeout=None)
+response_log(response_resource)
 
-# *******从提交页面获取 表单信息**********
-# 构建表单（默认身体健康)
+# 从提交页面获取 表单信息
+# 构建表单（默认校内+身体健康)
 post_data = {
     "ttoken":  "",
     "province": "湖北省",
@@ -56,7 +82,9 @@ post_data = {
     "qt": "",
 }
 get_form_url = "http://yiqing.ctgu.edu.cn/wx/health/toApply.do"
-response_resource = yiqing_session.get(get_form_url, timeout=5, headers =header, verify=False,)
+response_resource = yiqing_session.get(get_form_url, timeout=5, headers=header, verify=False)
+response_log(response_resource)
+
 # 获取必要信息填入表单
 soup = BeautifulSoup(response_resource.text, "html.parser")
 get_form_list = soup.find_all("input")[0:15]
@@ -65,10 +93,13 @@ for form_data in get_form_list:
         name = form_data.attrs["name"]
         post_data[name] = form_data.attrs["value"]
     except:
-        print("无\"" + name + "\"字段")
+        logging.error("[ERROR] 无\"" + name + "\"字段")
 
-# *************提交最终表单***********
+# 提交最终表单
 post_form_url = "http://yiqing.ctgu.edu.cn/wx/health/saveApply.do"
 header["Referer"] = "http://yiqing.ctgu.edu.cn/wx/health/toApply.do"
 response_resource = yiqing_session.post(post_form_url, data=post_data, headers=header, verify=False, timeout=None)
-print(response_resource.text)
+
+# 输出结果
+response_log(response_resource)
+logging.info("🔔 打卡结束，打卡过程请自行查看日志")
